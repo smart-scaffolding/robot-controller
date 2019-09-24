@@ -281,6 +281,63 @@ class Arm:
                 return q
         raise ValueError("Could not find solution.")
 
+    def ikineConstrained(self, p, num_iterations=1000, alpha=0.1):
+        """Computes the inverse kinematics to find the correct joint
+        configuration to reach a given point
+
+        :param p: The point (x, y, z) to solve the inverse kinematics for
+        :type p: numpy.ndarray
+
+        :param num_iterations: The number of iterations to try before
+                               giving up
+        :type num_iterations: int
+
+        :param alpha: The stepsize for the ikine solver (0.0 - 1.0)
+        :type alpha: int
+
+        :returns: 1xN vector of the joint configuration for given point p.
+        :rtype: numpy.ndarray
+        """
+        # Check to make sure alpha is between 0 and 1
+        if not (0.0 <= alpha <= 1.0):
+            print "Invalid alpha. Defaulting to 0.1"
+            alpha = 0.1
+
+        q = self.get_current_joint_config()
+        self.qs = np.array([q.copy()])
+
+        pTarget = np.copy(p)
+        # TODO fix the hardcoded value
+        pTarget[2] = pTarget[2] + 2.0
+        goal = utils.create_homogeneous_transform_from_point(pTarget)
+        for i in xrange(num_iterations):
+            # Calculate position error of the end effector
+            curr = self.fkine(q, range(self.num_links - 1))
+            err = goal - curr
+
+            # Convert error from homogeneous to xyz space
+            err = utils.create_point_from_homogeneous_transform(err)
+
+
+            # Get the psudoinverse of the Jacobian
+            J = self.jacob0(q)
+            vel_J = J[0:3, :]
+
+            # Increment q a tiny bit
+            delta_q = np.linalg.pinv(vel_J) * err
+            delta_q = np.squeeze(np.asarray(delta_q))
+            q = q + (alpha * delta_q.flatten())
+
+            # xy = (curr[0]**2 + curr[1]**2)**0.5
+            # q[-1] = q[1] - np.pi/2
+            # print(curr)
+
+            self.qs = np.vstack((self.qs, q.copy()))
+
+            if abs(np.linalg.norm(err)) <= 1e-6:
+                return q
+        raise ValueError("Could not find solution.")
+
     def jacob0(self, q=None):
         """Calculates the jacobian in the world frame by finding it in
         the tool frame and then converting to the world frame.
