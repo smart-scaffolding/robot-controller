@@ -329,7 +329,7 @@ class Arm:
             q = q + (alpha * delta_q.flatten())
 
             # xy = (curr[0]**2 + curr[1]**2)**0.5
-            # q[-1] = q[1] - np.pi/2
+            q[-1] = q[1] - np.pi/2
             # print(curr)
 
             self.qs = np.vstack((self.qs, q.copy()))

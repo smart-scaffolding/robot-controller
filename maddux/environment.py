@@ -54,7 +54,7 @@ class Environment:
             if self.collision():
                 break
 
-    def animate(self, duration=None, save_path=None):
+    def animate(self, duration=None, save_path=None, robot=None):
         """Animates the running of the program
 
         :param duration: (Optional) Duration of animation in seconds
@@ -69,11 +69,11 @@ class Environment:
         dynamic_iter_per_frame = 10 * fps
 
         if duration is None:
-            if self.robot is None:
+            if robot is None:
                 # Sensible Default
                 frames = fps * 5
             else:
-                frames = len(self.robot[0].qs)
+                frames = len(robot[0].qs)
         else:
             frames = int(fps * duration)
 
@@ -83,15 +83,15 @@ class Environment:
                 map(lambda obj: obj.step(), self.dynamic_objects)
                 # Check for collisions
                 self.collision()
-            if self.robot is not None:
-                for robot in self.robot:
-                    next_q = robot.qs[i]
-                    robot.update_angles(next_q)
-            self.plot(ax=ax, show=False)
+            if robot is not None:
+
+                next_q = robot.qs[i]
+                robot.update_angles(next_q)
+            self.plot(ax=ax, show=False, robot=robot)
 
         fig = plt.figure(figsize=(8, 8))
         ax = Axes3D(fig)
-        self.plot(ax=ax, show=False)
+        self.plot(ax=ax, show=False, robot=robot)
 
         # If we don't assign its return to something, it doesn't run.
         # Seems like really weird behavior..
@@ -163,7 +163,7 @@ class Environment:
 
         return False
 
-    def plot(self, ax=None, show=True):
+    def plot(self, ax=None, show=True, robot=None):
         """Plot throw trajectory and ball
 
         :param ax: Current axis if a figure already exists
@@ -203,9 +203,9 @@ class Environment:
         map(lambda obj: obj.plot(ax), self.dynamic_objects)
         map(lambda obj: obj.plot(ax), self.static_objects)
 
-        if self.robot:
-            for i in self.robot:
-                i.plot(ax)
+        if robot:
+
+            robot.plot(ax)
 
         if show:
             plt.show()
