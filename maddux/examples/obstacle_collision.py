@@ -13,6 +13,8 @@ def obstacle_collision():
                  Obstacle([1, 2, 1], [4, 3, 1.5])]
     # And a ball
     ball = Ball([2.5, 2.5, 2.0], 0.25)
+
+    brick = Obstacle([1, 2, 1], [4, 3, 1.5])
     
     # Create an arm
     q0 = np.array([0, 0, 0, np.pi / 2, 0, 0, 0])
@@ -20,7 +22,7 @@ def obstacle_collision():
     
     # Define environment
     env = Environment(dimensions=[10.0, 10.0, 20.0],
-                      dynamic_objects=[ball],
+                      dynamic_objects=[brick],
                       static_objects=obstacles,
                       robot=[human_arm])
     

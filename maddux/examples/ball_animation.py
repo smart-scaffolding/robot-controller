@@ -12,7 +12,7 @@ def ball_animation():
     for _ in xrange(5):
         # Create a ball at a random starting position
         starting_pos = np.random.rand(3) * 10
-        ball = Ball(starting_pos, radius=0.15)
+        ball = Ball([4, 3, 1.5], starting_pos, radius=0.15)
         
         # And generate a random velocity to "throw" it at
         velocity = np.random.uniform(-10, 10, 3)

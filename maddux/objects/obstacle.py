@@ -4,6 +4,7 @@ A stationary rectangular solid that something may collide with
 import numpy as np
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from static import StaticObject
+from throwable import ThrowableObject
 
 
 class Obstacle(StaticObject):
@@ -25,6 +26,7 @@ class Obstacle(StaticObject):
         self.pt1 = pt1
         self.pt2 = pt2
         self.color = color
+        ThrowableObject.__init__(self, pt1, False)
 
     # TODO: Make this use numpy arrays instead of lists
     def get_paths(self):

@@ -11,7 +11,7 @@ def arm_ball_animation():
     human_arm = simple_human_arm(2.0, 2.0, q0, np.array([2.0, 2.0, 0.0]))
     
     # Create a ball the arm can hold
-    ball = Ball(np.array([0.0, 0.0, 0.0]), 0.15)
+    ball = Ball([1, 1 , 1],np.array([0.0, 0.0, 0.0]), 0.15)
     human_arm.hold(ball)
     
     # Declare our environment
@@ -23,7 +23,12 @@ def arm_ball_animation():
     position = human_arm.ikine([3.0, 2.0, 3.0])
 
     # Animate for 3 seconds
+
     env.animate(3.0)
+
+    position = human_arm.ikine([5.0, 4.0, 1.0])
+    env.animate(3.0)
+
 
 if __name__ == '__main__':
     arm_ball_animation()

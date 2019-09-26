@@ -149,6 +149,8 @@ class Link:
         print 'Link offset: {}'.format(self.offset)
         print 'Link length: {}'.format(self.length)
         print 'Link twist: {}'.format(self.twist)
+        print 'Base Pose: {}'.format(self.base_pos)
+        print 'End Pose: {}'.format(self.end_pos)
 
     def plot(self, ax):
         """Plots the link on the given matplotlib figure
@@ -160,6 +162,8 @@ class Link:
         """
         if self.base_pos is None or self.end_pos is None:
             raise ValueError("Base and End positions were never defined")
+
+        plot_sphere(self.base_pos, self.link_size, ax, color='black')
 
         plot_sphere(self.end_pos, self.link_size, ax, color='black')
 

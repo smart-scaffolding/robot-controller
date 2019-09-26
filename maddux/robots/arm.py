@@ -3,7 +3,7 @@ A robot arm defined by a sequence of DH links
 """
 import numpy as np
 import utils
-
+from math import atan2, cos, sin, atan
 
 class Arm:
 
@@ -233,7 +233,7 @@ class Arm:
         t = t * self.tool
         return t
 
-    def ikine(self, p, num_iterations=1000, alpha=0.1):
+    def ikine(self, p, num_iterations=1000, alpha=0.1, printVals=False, q=None):
         """Computes the inverse kinematics to find the correct joint
         configuration to reach a given point
 
@@ -255,19 +255,32 @@ class Arm:
             print "Invalid alpha. Defaulting to 0.1"
             alpha = 0.1
 
-        q = self.get_current_joint_config()
+        # q = self.get_current_joint_config()
+        print 'Current Joint Config {}'.format(q)
         self.qs = np.array([q.copy()])
+        # print(q)
+        # q[-2] = -1.1
 
+        # print("P VALUE: ")
+        # print(p)
+        # p[2] = p[2]-2
+        # print(p)
         goal = utils.create_homogeneous_transform_from_point(p)
         for i in xrange(num_iterations):
             # Calculate position error of the end effector
+            # no_end_effector = q[0:len(q)-2]
             curr = self.fkine(q)
             err = goal - curr
+
 
             # Convert error from homogeneous to xyz space
             err = utils.create_point_from_homogeneous_transform(err)
 
+            if printVals:
+                print "Angle Err: {}".format(abs(np.linalg.norm(err)))
+
             # Get the psudoinverse of the Jacobian
+            # q[-2] = -1.1
             J = self.jacob0(q)
             vel_J = J[0:3, :]
 
@@ -276,11 +289,50 @@ class Arm:
             delta_q = np.squeeze(np.asarray(delta_q))
             q = q + (alpha * delta_q.flatten())
             self.qs = np.vstack((self.qs, q.copy()))
+            # print(q)
 
+            # print(self.links[4].display())
             if abs(np.linalg.norm(err)) <= 1e-6:
                 return q
         raise ValueError("Could not find solution.")
 
+    def ikine2(self, p, num_iterations=1000, alpha=0.1):
+        """Computes the inverse kinematics to find the correct joint
+        configuration to reach a given point
+
+        :param p: The point (x, y, z) to solve the inverse kinematics for
+        :type p: numpy.ndarray
+
+        :param num_iterations: The number of iterations to try before
+                               giving up
+        :type num_iterations: int
+
+        :param alpha: The stepsize for the ikine solver (0.0 - 1.0)
+        :type alpha: int
+
+        :returns: 1xN vector of the joint configuration for given point p.
+        :rtype: numpy.ndarray
+        """
+        # Check to make sure alpha is between 0 and 1
+        if not (0.0 <= alpha <= 1.0):
+            print "Invalid alpha. Defaulting to 0.1"
+            alpha = 0.1
+        px, pz, py = p
+        px = float(px)
+        py = float(py)
+        pz = float(pz)
+        b = 4.0
+        d = 4.0
+        q = self.get_current_joint_config()
+        self.qs = np.array([q.copy()])
+        q[0] = atan2(py, px)
+        q[1] = -2*atan((2*b*py - 2*b*d + (-(d**2.0 - 2*d*py + px**2.0 + py**2.0)*(- 4*b**2.0 + d**2.0 - 2*d*py + px**2.0 + py**2.0))**(1/2))/(d**2.0 - 2*d*py + px**2.0 + 2*b*px + py**2.0) + (4*(b*d - b*py))/(d**2.0 - 2*d*py + px**2.0 + 2*b*px + py**2.0))
+        q[2] = 2*atan((2*b*py - 2*b*d + (-(d**2 - 2*d*py + px**2 + py**2)*(- 4*b**2 + d**2 - 2*d*py + px**2 + py**2))**(1/2))/(d**2 - 2*d*py + px**2 + 2*b*px + py**2))
+        q[3] = -1.57
+        q[4] = 0
+        self.qs = np.vstack((self.qs, q.copy()))
+        # goal = utils.create_homogeneous_transform_from_point(p)
+        return q
     def jacob0(self, q=None):
         """Calculates the jacobian in the world frame by finding it in
         the tool frame and then converting to the world frame.

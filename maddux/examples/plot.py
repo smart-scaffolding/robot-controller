@@ -13,7 +13,7 @@ def plot():
     human_arm = simple_human_arm(2.0, 2.0, q0, np.array([2.0, 2.0, 0.0]))
     
     # And our objects
-    ball = Ball(np.array([2.0, 0.0, 2.0]), 0.15)
+    ball = Ball([0, 0, 0], np.array([2.0, 0.0, 2.0]), 0.15)
     target = Target(np.array([5.0, 8.0, 2.0]), 0.5)
     env = Environment(dimensions=[10.0, 10.0, 10.0],
                       dynamic_objects=[ball],

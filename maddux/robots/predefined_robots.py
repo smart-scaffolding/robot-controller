@@ -89,9 +89,10 @@ def inchworm(seg_lens, q0, base=None):
     L2 = Link(0, 0, seg_lens[1],  0)
     L3 = Link(0, 0, seg_lens[2],  0)
     L4 = Link(0, 0,  0, 1.571)
-    L4 = Link(0, 0, seg_lens[3], 0)
+    L5 = Link(0, 0, seg_lens[3], 0)
+    L6 = Link(0, 0, 0, 0)
 
-    links = np.array([L1, L2, L3, L4])
+    links = np.array([L1, L2, L3, L4, L5, L6])
 
-    robot = Arm(links, q0, 'inchworm', 10, base)
+    robot = Arm(links, q0, 'inchworm', 4, base)
     return robot
