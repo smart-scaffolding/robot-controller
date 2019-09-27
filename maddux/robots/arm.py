@@ -3,6 +3,8 @@ A robot arm defined by a sequence of DH links
 """
 import numpy as np
 import utils
+import serial
+import time
 
 
 class Arm:
@@ -281,7 +283,7 @@ class Arm:
                 return q
         raise ValueError("Could not find solution.")
 
-    def ikineConstrained(self, p, num_iterations=1000, alpha=0.1):
+    def ikineConstrained(self, p, ser, num_iterations=1000, alpha=0.1):
         """Computes the inverse kinematics to find the correct joint
         configuration to reach a given point
 
@@ -330,7 +332,23 @@ class Arm:
 
             # xy = (curr[0]**2 + curr[1]**2)**0.5
             q[-1] = q[1] - np.pi/2
-            # print(curr)
+
+            qTemp = q * 180 / np.pi
+            qTemp[2] -= 90
+            qTemp[3]
+            print qTemp
+
+            targetAngles = str(int(qTemp[1])).zfill(3)+str(int(qTemp[2])).zfill(3)+str(int(qTemp[3])).zfill(3)
+
+            while True:
+                ser.write(targetAngles)
+                time.sleep(0.01)
+                data = ser.readline()[:-2]  # the last bit gets rid of the new-line chars
+                if data:
+                    print data
+                    break
+
+            time.sleep(0.1)
 
             self.qs = np.vstack((self.qs, q.copy()))
 
