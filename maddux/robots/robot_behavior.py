@@ -24,15 +24,16 @@ class RobotBehavior:
 
     def follow_path(self, path):
         self.logger.info('FOLLOWING PATH')
-        for index, point in enumerate(path):
+        path_length = len(path) - 1
+        for index, point in enumerate(path[1:path_length]):
             print "Base Position: {}".format(utils.create_point_from_homogeneous_transform(self.robot.base))
             print "First Step: {}".format(point)
 
 
 
             if index == 0:
-                # second_step = (point[0]-2, point[1], point[2])
-                second_step = path[index-1]
+                second_step = (point[0]-2, point[1], point[2])
+                # second_step = path[index-1]
 
                 print "\t\tSecond Step: {}".format(second_step)
                 self.initial_move(point)
@@ -51,7 +52,11 @@ class RobotBehavior:
 
                 self.move_to_point(second_step)
 
-    def initial_move(self, destination):
+    def initial_move(self, destination, new_robot_pos=None):
+        if new_robot_pos is not None:
+            joint = self.robot.get_current_joint_config()
+            self.robot = inchworm(joint, new_robot_pos)
+            self.robot.qs = []
         q = self.robot.ikineConstrained(destination)
         self.robot_animation_cache.append(self.robot)
         self.robot.update_angles(q)
@@ -71,14 +76,14 @@ class RobotBehavior:
 
     def place_block(self, location, direction="Z"):
         if direction == "Z":
-            offsetLocation = (location[0], location[1], location[2]+1)
+            offsetLocation = [location[0], location[1], location[2]+1]
 
         elif direction == "Y":
-            offsetLocation = (location[0], location[1]+1, location[2])
+            offsetLocation = [location[0], location[1]+1, location[2]]
 
         else:
         # direction == "X"
-            offsetLocation = (location[0]+1, location[1], location[2])
+            offsetLocation = [location[0]+1, location[1], location[2]]
 
         print "-" * 20
         print "PLACING BLOCK"
@@ -87,16 +92,17 @@ class RobotBehavior:
         print "\t\tLocation: {}".format(offsetLocation)
         print "\tSwitching EE to place block"
 
+        new_pos = self.robot.end_effector_position()
         self.move_to_point(offsetLocation)
-
+        # self.initial_move(offsetLocation)
         print "\tLowering to put block down"
         print "\t\tLocation: {}".format(location)
-        self.initial_move(location)
-        self.obstacles.append((len(self.robot_animation_cache), Obstacle([8., 0., 0], [7., 1.0, 1])))
+        self.initial_move(location, new_pos)
+        self.obstacles.append((len(self.robot_animation_cache), Obstacle([location[0]+0.5, location[1], location[2]-1], [location[0]-0.5, location[1]+1, location[2]])))
 
         print "\tLifting up again"
         print "\t\tLocation: {}".format(offsetLocation)
-        self.initial_move(offsetLocation)
+        self.initial_move(offsetLocation, new_pos)
 
         return self.robot
 

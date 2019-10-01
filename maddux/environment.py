@@ -264,9 +264,9 @@ class Environment:
         map(lambda obj: obj.plot(ax), self.dynamic_objects)
         if obstacles is not None:
             for i in obstacles:
-                if i[0] == self.bot:
+                if i[0] <= self.bot:
                     i[1].plot(ax)
-        ax.voxels(blueprint, facecolors=colors, edgecolors='gray', zorder=0)
+        # ax.voxels(blueprint, facecolors=colors, edgecolors='gray', zorder=0)
 
         if robot:
             # for bot in robot:
