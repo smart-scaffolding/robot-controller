@@ -150,6 +150,15 @@ class Link:
         print 'Link length: {}'.format(self.length)
         print 'Link twist: {}'.format(self.twist)
 
+    def get_animation_points(self):
+        if self.base_pos is None or self.end_pos is None:
+            raise ValueError("Base and End positions were never defined")
+        pts = np.vstack((self.base_pos, self.end_pos))
+        return pts
+
+    def plot_multiple_motions(self, ax, pts):
+        return ax.plot(pts[:, 0], pts[:, 1], pts[:, 2],
+                       color='b', linewidth=3)
     def plot(self, ax):
         """Plots the link on the given matplotlib figure
 
@@ -161,7 +170,7 @@ class Link:
         if self.base_pos is None or self.end_pos is None:
             raise ValueError("Base and End positions were never defined")
 
-        plot_sphere(self.end_pos, self.link_size, ax, color='black')
+        plot_sphere((self.end_pos[0], self.end_pos[1], self.end_pos[2]), self.link_size, ax, color='black')
 
         # If there's no length associated, we don't have to draw one
         if self.length == 0 and self.offset == 0:
@@ -169,5 +178,10 @@ class Link:
 
         pts = np.vstack((self.base_pos, self.end_pos))
 
-        return ax.plot(pts[:, 0], pts[:, 1], pts[:, 2],
-                       color='b', linewidth=3)
+        ax.plot(pts[:, 0], pts[:, 1], pts[:, 2],
+                       color='b', linewidth=3, zorder=max(axis.get_zorder()
+                            for axis in ax._get_axis_list()) + 1)
+
+        # line.set_data(pts[:, 0], pts[:, 1])
+        # line.set_3d_properties(pts[:, 2])
+

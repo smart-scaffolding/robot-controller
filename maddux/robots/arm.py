@@ -281,7 +281,7 @@ class Arm:
                 return q
         raise ValueError("Could not find solution.")
 
-    def ikineConstrained(self, p, num_iterations=1000, alpha=0.1):
+    def ikineConstrained(self, p, num_iterations=1000, alpha=0.1, prior_q=None):
         """Computes the inverse kinematics to find the correct joint
         configuration to reach a given point
 
@@ -304,8 +304,14 @@ class Arm:
             alpha = 0.1
 
         q = self.get_current_joint_config()
-        self.qs = np.array([q.copy()])
-
+        # print "QS: {}".format(prior_q)
+        # print "Copying Joint Config: {}".format(q)
+        if prior_q is not None:
+            # print "QS: {}".format(prior_q)
+            self.qs = q.copy()
+        else:
+            # print "QS: {}".format(prior_q)
+            self.qs = np.array(q.copy())
         pTarget = np.copy(p)
         # TODO fix the hardcoded value
         pTarget[2] = pTarget[2] + 2.0
@@ -334,7 +340,7 @@ class Arm:
 
             self.qs = np.vstack((self.qs, q.copy()))
 
-            if abs(np.linalg.norm(err)) <= 1e-6:
+            if abs(np.linalg.norm(err)) <= 1e-1:
                 return q
         raise ValueError("Could not find solution.")
 
@@ -434,7 +440,7 @@ class Arm:
                 return True
         return False
 
-    def plot(self, ax):
+    def plot(self, ax, stored_q, links=None):
         """Plot our robot into given axes
 
         :param ax: axes of plot
@@ -442,8 +448,11 @@ class Arm:
 
         :rtype: None
         """
-        for link in self.links:
+        # link_animations = [ax.plot([], [], []) for link in links]
+        for link in links:
             link.plot(ax)
+            # link_animations.append(animation_output)
+        # return link_animations
 
     def save_path(self, filename):
         """Save the current path to a file

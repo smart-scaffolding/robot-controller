@@ -65,7 +65,9 @@ def noodle_arm(seg_lens, q0, base=None):
     robot = Arm(links, q0, 'noodle_arm', 10, base)
     return robot
 
-def inchworm(seg_lens, q0, base=None):
+def inchworm(q0, base=None):
+    seg_lens = np.array([1.375, 2.143, 2.143, 1.375])
+
     """Creates a complex arm with 10 segments
 
     :param seg_lens: 1x10 vector of lengths of each sement
@@ -88,7 +90,7 @@ def inchworm(seg_lens, q0, base=None):
     L1 = Link(0, seg_lens[0], 0,  1.571)
     L2 = Link(0, 0, seg_lens[1],  0)
     L3 = Link(0, 0, seg_lens[2],  0)
-    L4 = Link(0, 0,  0, 1.571)
+    # L4 = Link(0, 0,  0, 1.571)
     L4 = Link(0, 0, seg_lens[3], 0)
 
     links = np.array([L1, L2, L3, L4])

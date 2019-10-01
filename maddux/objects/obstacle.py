@@ -8,7 +8,7 @@ from static import StaticObject
 
 class Obstacle(StaticObject):
 
-    def __init__(self, pt1, pt2, color='r'):
+    def __init__(self, pt1, pt2, color='k'):
         """Create a 3D Rectangle from 2 points
 
         :param pt1: The first point (x, y, z) defining the rect
