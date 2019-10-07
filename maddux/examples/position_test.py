@@ -10,7 +10,7 @@ block_size = 3.0
 
 
 def arm_animation():
-    ser = serial.Serial(port='/dev/cu.usbmodem14201', baudrate=9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
+    ser = serial.Serial(port='/dev/cu.usbmodem14101', baudrate=9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
                         bytesize=serial.EIGHTBITS, timeout=3.0)
 
     time.sleep(2)
@@ -31,25 +31,30 @@ def arm_animation():
     q1 = [0., 0, 0, 0]
     q2 = [0, np.pi/2, 0, 0] #180 degrees
     q3 = [0, np.pi/3, 0, 0] #90 degrees
+    qFow = np.array([0, 65, -36, 60]) #90 degrees
+    qFow = qFow / 180 * np.pi
+    qBack = np.array([0, 49, -1, 42]) #90 degrees
+    qBack = qBack / 180 * np.pi
 
-    angles.append(q3)
-    angles.append(q2)
+    # angles.append(qBack)
+    # angles.append(qFow)
+    # angles.append(q3)
+    # angles.append(q2)
     angles.append(q1)
-
-
-
 
     while True:
         targetAngles = send_angles(angles.pop())
         ser.write(targetAngles)
         time.sleep(5.0)
-        # data = ser.readline()[:-2]
-        # if data:
-        #     print data
-        #     break
+        data = ser.readline()[:-2]
+        if data:
+            print data
+            # break
+
         # time.sleep(2.0)
-        robot_behavior.robot.plot(ax, robot_behavior.robot.qs, robot_behavior.robot.links)
-        plt.show()
+
+        # robot_behavior.robot.plot(ax, robot_behavior.robot.qs, robot_behavior.robot.links)
+        # plt.show()
 
 def send_angles(q):
     qTemp = np.array([q[0] + np.pi, q[1] + (np.pi / 2), q[2]*-1 + np.pi, q[3]*-1 + np.pi])
