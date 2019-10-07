@@ -58,6 +58,16 @@ void loop() {
 //      motorB.write(180);
 //      motorC.write(180);
     }
+    else if(buf[0] == 'A'){
+        motorA.write(155);
+        motorB.write(56);
+        motorC.write(150);
+    }
+    else if(buf[0] == 'B'){
+        motorA.write(139);
+        motorB.write(89);
+        motorC.write(132);
+    }
     else{
       for(int i = 0; i < len; i++){
         temp[tempIdx] = buf[i];
