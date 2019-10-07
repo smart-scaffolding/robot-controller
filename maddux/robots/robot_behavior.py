@@ -29,7 +29,7 @@ class RobotBehavior:
             print "Base Position: {}".format(utils.create_point_from_homogeneous_transform(self.robot.base))
             print "First Step: {}".format(point)
 
-
+            ee_distance_threshold = 2.5
 
             if index == 0:
                 second_step = (point[0]-2, point[1], point[2])
@@ -40,17 +40,30 @@ class RobotBehavior:
                 print "Made first move"
                 print "\t\tBase Position: {}".format(utils.create_point_from_homogeneous_transform(self.robot.base))
 
-                self.move_to_point(second_step)
-                print "Made second move"
-                print "\t\tEE Position: {}".format(self.robot.end_effector_position())
+                distance_between_ee = np.linalg.norm(self.robot.end_effector_position()) - np.linalg.norm(utils.create_point_from_homogeneous_transform(self.robot.base))
+                print "Distance between EE: {}".format(distance_between_ee)
+                if distance_between_ee > ee_distance_threshold:
+                    print "Making second move"
+                    self.move_to_point(second_step)
+                    print "\t\tEE Position: {}".format(self.robot.end_effector_position())
+                else:
+                    self.move_to_point(self.robot.end_effector_position())
             else:
 
                 self.move_to_point(point)
-                second_step = path[index-1]
-                print "\t\tSecond Step: {}".format(second_step)
-                print "\t\tBase Position: {}".format(utils.create_point_from_homogeneous_transform(self.robot.base))
 
-                self.move_to_point(second_step)
+                distance_between_ee = np.linalg.norm(self.robot.end_effector_position()) - np.linalg.norm(
+                    utils.create_point_from_homogeneous_transform(self.robot.base))
+                print "Distance between EE: {}".format(distance_between_ee)
+                if distance_between_ee > ee_distance_threshold:
+                    print "Making second move"
+                    second_step = path[index - 1]
+                    print "\t\tSecond Step: {}".format(second_step)
+                    print "\t\tBase Position: {}".format(utils.create_point_from_homogeneous_transform(self.robot.base))
+                    self.move_to_point(second_step)
+                else:
+                    self.move_to_point(self.robot.end_effector_position())
+
 
     def initial_move(self, destination, new_robot_pos=None):
         if new_robot_pos is not None:
@@ -85,14 +98,18 @@ class RobotBehavior:
         # direction == "X"
             offsetLocation = [location[0]+1, location[1], location[2]]
 
+        new_pos = self.robot.end_effector_position()
+
+
         print "-" * 20
         print "PLACING BLOCK"
         print "-" * 20
         print "\tRaising Above"
+        print "\t\tCurrent EE Location: {}".format(new_pos)
         print "\t\tLocation: {}".format(offsetLocation)
         print "\tSwitching EE to place block"
 
-        new_pos = self.robot.end_effector_position()
+
         self.move_to_point(offsetLocation)
         # self.initial_move(offsetLocation)
         print "\tLowering to put block down"

@@ -266,7 +266,7 @@ class Environment:
             for i in obstacles:
                 if i[0] <= self.bot:
                     i[1].plot(ax)
-        # ax.voxels(blueprint, facecolors=colors, edgecolors='gray', zorder=0)
+        ax.voxels(blueprint, facecolors=colors, edgecolors='gray', zorder=0)
 
         if robot:
             # for bot in robot:

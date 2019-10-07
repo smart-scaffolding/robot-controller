@@ -281,7 +281,7 @@ class Arm:
                 return q
         raise ValueError("Could not find solution.")
 
-    def ikineConstrained(self, p, num_iterations=1000, alpha=0.1, prior_q=None):
+    def ikineConstrained(self, p, num_iterations=1000, alpha=0.1, prior_q=None, vertical=False):
         """Computes the inverse kinematics to find the correct joint
         configuration to reach a given point
 
@@ -336,6 +336,11 @@ class Arm:
 
             # xy = (curr[0]**2 + curr[1]**2)**0.5
             q[-1] = q[1] - np.pi/2
+            # q[-2] = 1.3
+            # if vertical:
+            #     q[1] = np.pi
+            # else:
+            #     q[1] = -np.pi/2
             # print(curr)
 
             self.qs = np.vstack((self.qs, q.copy()))

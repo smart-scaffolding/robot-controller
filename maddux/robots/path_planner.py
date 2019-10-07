@@ -3,6 +3,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib as mpl
 import numpy as np
 import heapq
+import logging
 import pandas as pd
 from collections import OrderedDict
 
@@ -34,11 +35,13 @@ class PathPlanner:
         self.goal = goal
         self.blueprint = blueprint
         self.building_dimensions = self.blueprint.shape
-        print("Building Dimensions: {}".format(self.building_dimensions))
+        print("\nBuilding Dimensions: {}\n".format(self.building_dimensions))
         self.colors = np.array([[['#424ef5']*self.building_dimensions[2]] *
                    self.building_dimensions[1]]*self.building_dimensions[0])
 
         self.route = None
+
+        self.logger = logging.getLogger('PathPlanning')
 
     def heuristic(self, a, b):
         return np.sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2 + (b[2] - a[2]) ** 2)
@@ -104,9 +107,12 @@ class PathPlanner:
 
     def get_path(self):
         route = self.astar(self.blueprint, self.start, self.goal)
+        if route is None:
+            self.logger.error("Unable to find route between points {} and {}".format(self.start, self.goal))
+            raise Exception("Path planning unable to find route")
         route = route + [self.start]
         route = route[::-1]
-        print("Path to Traverse: {}".format(route))
+        print("Path to Traverse: {}\n".format(route))
         self.route = route
         return route
 

@@ -90,10 +90,45 @@ def inchworm(q0, base=None):
     L1 = Link(0, seg_lens[0], 0,  1.571)
     L2 = Link(0, 0, seg_lens[1],  0)
     L3 = Link(0, 0, seg_lens[2],  0)
-    # L4 = Link(0, 0,  0, 1.571)
     L4 = Link(0, 0, seg_lens[3], 0)
 
     links = np.array([L1, L2, L3, L4])
+
+    robot = Arm(links, q0, 'inchworm', 10, base)
+    return robot
+
+def inchworm_vertical(q0, base=None):
+    seg_lens = np.array([1.375, 2.143, 2.143, 1.375])
+
+    """Creates a complex arm with 10 segments
+
+    :param seg_lens: 1x10 vector of lengths of each sement
+    :type seg_lens: numpy.ndarray
+
+    :param q0: 1xN vector of the starting joint configuration
+    :type q0: numpy.ndarray
+
+    :param base: (Optional) optional (x, y, z) base location of arm
+    :type base: numpy.ndarray or None
+
+    :returns: "Noodle" arm
+    :rtype: maddux.robot.Arm
+    """
+    # L1 = Link(-np.pi/2, 0, 0,  -np.pi/2)
+    # L2 = Link(-np.pi/2, 0, seg_lens[0],  -np.pi/2)
+    # L3 = Link(-np.pi/2, 0, seg_lens[1],  0)
+    # L4 = Link(0, 0, seg_lens[2],  0)
+    # L5 = Link(np.pi/2, 0, 0, -np.pi/2)
+    # L6 = Link(0, seg_lens[3], 0, np.pi / 2)
+
+    L1 = Link(0, 0, 0, -np.pi/2)
+    L2 = Link(0, 0, seg_lens[0], 0)
+    L3 = Link(0, 0, seg_lens[1], 0)
+    L4 = Link(0, 0, seg_lens[2], 0)
+    L5 = Link(0, 0, seg_lens[3], 0)
+    L6 = Link(0, 0, 0, -np.pi/2)
+
+    links = np.array([L1, L2, L3, L4, L5, L6])
 
     robot = Arm(links, q0, 'inchworm', 10, base)
     return robot
