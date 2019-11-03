@@ -47,14 +47,12 @@ class Block:
                         return i # TODO change this to use actual closest distance 
 
 
-
-    
 class PathPlanner:
     def __init__(self, startFace, goalFace, blueprint):
         self.startFace = startFace
         self.goalFace = goalFace
-        self.blueprint = blueprint
-        self.building_dimensions = self.blueprint.shape
+        self.bp = blueprint
+        self.building_dimensions = self.bp.shape
         print("\nBuilding Dimensions: {}\n".format(self.building_dimensions))
         self.colors = np.array([[['#424ef5']*self.building_dimensions[2]] *
                    self.building_dimensions[1]]*self.building_dimensions[0])
@@ -66,7 +64,7 @@ class PathPlanner:
         return np.sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2 + (b[2] - a[2]) ** 2)
 
     # array: the current structure, startFace: the start face, goalFace: the goal face
-    def faceStar(self, array, startFace, goalFace):
+    def faceStar(self, startFace, goalFace):
 
         neighbors = [(0, 1, 0), (0, 1, -1), (0, 1, 1),
                      (0, -1, 0), (0, -1, -1), (0, -1, 1),
@@ -110,11 +108,11 @@ class PathPlanner:
 
             close_set.add(currentFace)
             for i, j, k in neighbors:
-                currentBlock = self.get_block_idx(array, currentFace)
+                currentBlock = self.get_block_idx(currentFace)
                 neighbor = currentBlock[0] + i, currentBlock[1] + j, currentBlock[2] + k
                 # for each available neighbor
-                if self.within_range_huh(array,neighbor[0], neighbor[1], neighbor[2]):
-                    if array[neighbor[0]][neighbor[1]][neighbor[2]] == 0:
+                if self.within_range_huh(neighbor[0], neighbor[1], neighbor[2]):
+                    if self.bp[neighbor[0]][neighbor[1]][neighbor[2]] == 0:
                         continue
                 else:
                     continue
@@ -122,7 +120,7 @@ class PathPlanner:
                 # for each face on neighbor
                 for x, y, z in neighborFaces:
                     # if there is not a block on a face
-                    if array[neighbor[0]+i][neighbor[1]+j][neighbor[2]+k] == 0:
+                    if self.bp[neighbor[0]+i][neighbor[1]+j][neighbor[2]+k] == 0:
                         neighborFace = neighbor[0] + i*blockWidth, neighbor[1] + j*blockWidth, neighbor[k] + k*blockWidth
                         tentative_g_score = gscore[currentFace] + self.heuristic(currentFace, neighborFace)
                         if neighborFace in close_set and tentative_g_score >= gscore.get(neighborFace, 0):
@@ -135,10 +133,10 @@ class PathPlanner:
                                 self.heuristic(neighborFace, goalFace)
                             heapq.heappush(oheap, (fscore[neighborFace], neighborFace))
 
-    def face_reachable_huh(self, array, currentFace, targetFace, armReach):
-        if self.heuristic(currentFace, target) < armReach:
-            currentFaceIdx = self.get_face_index(array,currentFace)
-            targetFaceIdx = self.get_face_index(array,targetFace)
+    def face_reachable_huh(self, currentFace, targetFace, armReach):
+        if self.heuristic(currentFace, targetFace) < armReach:
+            currentFaceIdx = self.get_face_index(currentFace)
+            targetFaceIdx = self.get_face_index(targetFace)
             if self.target_on_perpendicular_plane_huh(currentFace, targetFace, currentFaceIdx, targetFaceIdx):
                 return True
             else:
@@ -163,11 +161,11 @@ class PathPlanner:
         else:
             return True
 
-    def get_face_index(self, array, face):
-        idx_x, idx_y, idx_z = self.get_block_idx(array, face)
+    def get_face_index(self, face):
+        idx_x, idx_y, idx_z = self.get_block_idx(face)
 
-        if self.within_range_huh(array, idx_x, idx_y, idx_z):
-            if array[idx_x][idx_y][idx_z] == 0:
+        if self.within_range_huh(idx_x, idx_y, idx_z):
+            if self.bp[idx_x][idx_y][idx_z] == 0:
                 return None
             else:
                 if idx_x > face[0]: # face d
@@ -183,20 +181,20 @@ class PathPlanner:
                 elif idx_z < face[2]: # face f
                     return 'f'
 
-    def get_block_idx(self, array, face):
+    def get_block_idx(self, face):
         idx_x = int(round(face[0]))
         idx_y = int(round(face[1]))
         idx_z = int(round(face[2]))
         return idx_x, idx_y, idx_z
 
-    def within_range_huh(self,array,x,y,z):
-        if 0 <= x < array.shape[0] and 0 <= y < array.shape[1] and 0 <= z < array.shape[2]:
+    def within_range_huh(self,x,y,z):
+        if 0 <= x < self.bp.shape[0] and 0 <= y < self.bp.shape[1] and 0 <= z < self.bp.shape[2]:
             return True
         else:
             return False
 
     def get_path(self):
-        route = self.faceStar(self.blueprint, self.startFace, self.goalFace)
+        route = self.faceStar(self.startFace, self.goalFace)
         if route is None:
             # self.logger.error("Unable to find route between points {} and {}".format(self.startFace, self.goalFace))
             raise Exception("Path planning unable to find route")
@@ -227,9 +225,9 @@ class PathPlanner:
     #     print("Path to Traverse: {}\n".format(route))
 
 if __name__ == '__main__':
-    startFace = (0.5,0,0)
-    endFace = (1.5,0,0)
-    bp  = np.array([
+    startFace = (0,0,0.49)
+    endFace = (1,0,0.49)
+    bp1  = np.array([
             [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [1, 1, 1]],
             [[1, 0, 0], [1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
             [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
@@ -240,8 +238,18 @@ if __name__ == '__main__':
             [[1, 0, 0], [1, 0, 0], [1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
         ])
 
-    faceStar = PathPlanner(startFace,endFace,bp)
-    faceStar.get_path()
+    bp2 = np.array([
+        [[1, 0, 0], [0, 0, 0], [0, 0, 0]],
+        [[1, 0, 0], [0, 0, 0], [0, 0, 0]],
+        [[1, 0, 0], [0, 0, 0], [0, 0, 0]],
+    ])
+
+    faceStarPlanner = PathPlanner(startFace,endFace,bp2)
+
+    print(faceStarPlanner.get_face_index(startFace))
+    print(faceStarPlanner.get_face_index(endFace))
+
+    faceStarPlanner.get_path()
 
     
 
