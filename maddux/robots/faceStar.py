@@ -168,17 +168,17 @@ class PathPlanner:
             if self.bp[idx_x][idx_y][idx_z] == 0:
                 return None
             else:
-                if idx_x > face[0]: # face d
+                if idx_x < face[0]: # face d
                     return 'd'
-                elif idx_x < face[0]: # face c
+                elif idx_x > face[0]: # face c
                     return 'c'
-                elif idx_y > face[1]: # face b
+                elif idx_y < face[1]: # face b
                     return 'b'
-                elif idx_y < face[1]: # face a
+                elif idx_y > face[1]: # face a
                     return 'a'
-                elif idx_z > face[2]: # face e
+                elif idx_z < face[2]: # face e
                     return 'e'
-                elif idx_z < face[2]: # face f
+                elif idx_z > face[2]: # face f
                     return 'f'
 
     def get_block_idx(self, face):
@@ -245,9 +245,6 @@ if __name__ == '__main__':
     ])
 
     faceStarPlanner = PathPlanner(startFace,endFace,bp2)
-
-    print(faceStarPlanner.get_face_index(startFace))
-    print(faceStarPlanner.get_face_index(endFace))
 
     faceStarPlanner.get_path()
 
