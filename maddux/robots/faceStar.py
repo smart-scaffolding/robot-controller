@@ -179,25 +179,13 @@ class FaceStar:
         self.route = route
         return route
 
-    def display_path(self):
-        for i in self.route:
-            self.colors[i] = '#ff0000ff'
+    # def display_path(self):
+    #     for i in self.route:
+    #         self.colors[i] = '#ff0000ff'
 
-        self.colors[self.route[-1]] = '#03fc62'
-        return self.colors
+    #     self.colors[self.route[-1]] = '#03fc62'
+    #     return self.colors
 
-    # def get_traversal(self):
-    #     route = self.get_path()
-    #     for i in range(len(route)):
-    #         block = route[i]
-    #         newBlock = Block(block[0],block[1],block[2],availableFaces[i])
-    #         route[i] = list(route[i])
-    #         route[i].append(newBlock.get_face(0))
-    #         route[i] = tuple(route[i])
-
-    #         print("Block: {}\n".format(block))
-
-    #     print("Path to Traverse: {}\n".format(route))
     def display_path(self, path):
         npPath = np.array(path)
         npPath = np.add(npPath,0.5)
