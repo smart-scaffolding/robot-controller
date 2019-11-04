@@ -1,5 +1,5 @@
-# import matplotlib.pyplot as plt
-# from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 # import matplotlib as mpl
 # import pandas as pd
 # from collections import OrderedDict
@@ -54,8 +54,7 @@ class PathPlanner:
         self.bp = blueprint
         self.building_dimensions = self.bp.shape
         print("\nBuilding Dimensions: {}\n".format(self.building_dimensions))
-        self.colors = np.array([[['#424ef5']*self.building_dimensions[2]] *
-                   self.building_dimensions[1]]*self.building_dimensions[0])
+        self.colors = np.array([[[(0,0,1,0.3)]*self.building_dimensions[2]] * self.building_dimensions[1]]*self.building_dimensions[0], )
 
         self.route = None
         # self.logger = logging.getLogger('PathPlanning')
@@ -120,18 +119,20 @@ class PathPlanner:
                 # for each face on neighbor
                 for x, y, z in neighborFaces:
                     # if there is not a block on a face
-                    if self.bp[neighbor[0]+i][neighbor[1]+j][neighbor[2]+k] == 0:
-                        neighborFace = neighbor[0] + i*blockWidth, neighbor[1] + j*blockWidth, neighbor[k] + k*blockWidth
-                        tentative_g_score = gscore[currentFace] + self.heuristic(currentFace, neighborFace)
-                        if neighborFace in close_set and tentative_g_score >= gscore.get(neighborFace, 0):
-                            continue
+                    nextNeighbor = neighbor[0]+x, neighbor[1]+y, neighbor[1]+z
+                    if self.within_range_huh(nextNeighbor[0], nextNeighbor[1], nextNeighbor[2]):
+                        if self.bp[nextNeighbor[0]][nextNeighbor[1]][nextNeighbor[2]] == 0:
+                            neighborFace = neighbor[0] + x*blockWidth, neighbor[1] + y*blockWidth, neighbor[2] + z*blockWidth
+                            tentative_g_score = gscore[currentFace] + self.heuristic(currentFace, neighborFace)
 
-                        if tentative_g_score < gscore.get(neighborFace, 0) or neighborFace not in [i[1]for i in oheap]:
-                            came_from[neighborFace] = currentFace
-                            gscore[neighborFace] = tentative_g_score
-                            fscore[neighborFace] = tentative_g_score + \
-                                self.heuristic(neighborFace, goalFace)
-                            heapq.heappush(oheap, (fscore[neighborFace], neighborFace))
+                            if neighborFace in close_set and tentative_g_score >= gscore.get(neighborFace, 0):
+                                continue
+
+                            if tentative_g_score < gscore.get(neighborFace, 0) or neighborFace not in [i[1]for i in oheap]:
+                                came_from[neighborFace] = currentFace
+                                gscore[neighborFace] = tentative_g_score
+                                fscore[neighborFace] = tentative_g_score + self.heuristic(neighborFace, goalFace)
+                                heapq.heappush(oheap, (fscore[neighborFace], neighborFace))
 
     def face_reachable_huh(self, currentFace, targetFace, armReach):
         if self.heuristic(currentFace, targetFace) < armReach:
@@ -226,16 +227,16 @@ class PathPlanner:
 
 if __name__ == '__main__':
     startFace = (0,0,0.49)
-    endFace = (1,0,0.49)
+    endFace = (6.51,2.49,1)
     bp1  = np.array([
-            [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [1, 1, 1]],
-            [[1, 0, 0], [1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
             [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
             [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
             [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
             [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
             [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
-            [[1, 0, 0], [1, 0, 0], [1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
+            [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
+            [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
+            [[1, 0, 0], [1, 0, 0], [1, 1, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
         ])
 
     bp2 = np.array([
@@ -244,9 +245,25 @@ if __name__ == '__main__':
         [[1, 0, 0], [0, 0, 0], [0, 0, 0]],
     ])
 
-    faceStarPlanner = PathPlanner(startFace,endFace,bp2)
+    faceStarPlanner = PathPlanner(startFace,endFace,bp1)
 
-    faceStarPlanner.get_path()
+    path = faceStarPlanner.get_path()
+    # path = [(0, 0, 0.49), (1.0, 0.0, 0.49), (2.0, 0.49, 0.0), (3.0, 0.49, 0.0), (4.0, 0.49, 0.0), (5.0, 0.49, 0.0), (6.0, 0.49, 0.0), (6.51, 1.0, 0.0), (7.0, 2.49, 0.0)]
+    npPath = np.array(path)
+    npPath = np.add(npPath,0.5)
+
+
+    fig = plt.figure(figsize=(12, 12))
+    ax = Axes3D(fig)
+    ax.voxels(bp1, facecolors=faceStarPlanner.colors, edgecolors='gray', zorder=0)
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0, 10)
+    ax.set_zlim(0, 10)
+
+    ax.plot(npPath[:,0],npPath[:,1],npPath[:,2],c='r',marker='o',markersize=25)
+
+    plt.show()
+
 
     
 
