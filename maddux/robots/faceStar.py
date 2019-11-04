@@ -10,44 +10,18 @@ import heapq
 
 blockWidth = 0.49 # it is not 0.5 cuz this would make it a lot easier to calculate which block a face belongs to
 
-class Block:
+class BlockFace:
 
-    def __init__(self, xPos, yPos, zPos, availableFaces):
+    def __init__(self, xPos, yPos, zPos, face):
         self.xPos = xPos
         self.yPos = yPos
         self.zPos = zPos
-        self.availableFaces = availableFaces
-
-    def update_block(self, availableFaces):
-        self.availableFaces = availableFaces
+        self.face = face
     
-    # previousFace is index of the selected face in the previous block in the selected path
-    def get_face(self, previousFace):
-        if self.availableFaces[previousFace]:
-            return previousFace
-        else:
-            excludedFace = 0
-            if previousFace == 0: # face a
-                excludedFace = 1
-            elif previousFace == 1: # face b
-                excludedFace = 0
-            elif previousFace == 2: # face c
-                excludedFace = 3
-            elif previousFace == 3: # face d
-                excludedFace = 2
-            elif previousFace == 4: # face e
-                excludedFace = 5
-            elif previousFace == 5: # face f
-                excludedFace = 3
-            
-            for i in range(len(self.availableFaces)):
-                minHeuristic = 10000000
-                if i != excludedFace:
-                    if self.availableFaces[i]: # if face is available
-                        return i # TODO change this to use actual closest distance 
+    
 
 
-class PathPlanner:
+class FaceStar:
     def __init__(self, startFace, goalFace, blueprint):
         self.startFace = startFace
         self.goalFace = goalFace
@@ -224,10 +198,25 @@ class PathPlanner:
     #         print("Block: {}\n".format(block))
 
     #     print("Path to Traverse: {}\n".format(route))
+    def display_path(self, path):
+        npPath = np.array(path)
+        npPath = np.add(npPath,0.5)
+
+        fig = plt.figure(figsize=(12, 12))
+        ax = Axes3D(fig)
+        ax.voxels(bp1, facecolors=faceStarPlanner.colors, edgecolors='gray', zorder=0)
+        ax.set_xlim(0, 10)
+        ax.set_ylim(0, 10)
+        ax.set_zlim(0, 10)
+
+        ax.plot(npPath[:,0],npPath[:,1],npPath[:,2],c='r',marker='o',markersize=25)
+
+        plt.show()
+
 
 if __name__ == '__main__':
     startFace = (0,0,0.49)
-    endFace = (6.51,2.49,1)
+    endFace = (7,2.49,1)
     bp1  = np.array([
             [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
             [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
@@ -245,24 +234,13 @@ if __name__ == '__main__':
         [[1, 0, 0], [0, 0, 0], [0, 0, 0]],
     ])
 
-    faceStarPlanner = PathPlanner(startFace,endFace,bp1)
+    faceStarPlanner = FaceStar(startFace,endFace,bp1)
 
     path = faceStarPlanner.get_path()
     # path = [(0, 0, 0.49), (1.0, 0.0, 0.49), (2.0, 0.49, 0.0), (3.0, 0.49, 0.0), (4.0, 0.49, 0.0), (5.0, 0.49, 0.0), (6.0, 0.49, 0.0), (6.51, 1.0, 0.0), (7.0, 2.49, 0.0)]
-    npPath = np.array(path)
-    npPath = np.add(npPath,0.5)
+    faceStarPlanner.display_path(path)
 
-
-    fig = plt.figure(figsize=(12, 12))
-    ax = Axes3D(fig)
-    ax.voxels(bp1, facecolors=faceStarPlanner.colors, edgecolors='gray', zorder=0)
-    ax.set_xlim(0, 10)
-    ax.set_ylim(0, 10)
-    ax.set_zlim(0, 10)
-
-    ax.plot(npPath[:,0],npPath[:,1],npPath[:,2],c='r',marker='o',markersize=25)
-
-    plt.show()
+    
 
 
     
