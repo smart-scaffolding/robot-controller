@@ -18,19 +18,41 @@ class BlockFace:
         self.zPos = zPos
         self.face = face
     
+    def get_face_coordinate(self):
+        coordinate = [self.xPos, self.yPos, self.zPos]
+        if self.face == 'a':
+            coordinate[1] = coordinate[1] - blockWidth
+        elif self.face == 'b':
+            coordinate[1] = coordinate[1] + blockWidth
+        elif self.face == 'c':
+            coordinate[0] = coordinate[0] - blockWidth
+        elif self.face == 'd':
+            coordinate[0] = coordinate[0] + blockWidth
+        elif self.face == 'e':
+            coordinate[2] = coordinate[2] + blockWidth
+        elif self.face == 'f':
+            coordinate[2] = coordinate[2] - blockWidth
+        else:
+            return None
+        return tuple(coordinate)
     
 
 
 class FaceStar:
     def __init__(self, startFace, goalFace, blueprint):
-        self.startFace = startFace
-        self.goalFace = goalFace
+
+        self.startFace = startFace.get_face_coordinate()
+        if not self.startFace:
+            raise Exception("Start face is invalid")
+        self.goalFace = goalFace.get_face_coordinate()
+        if not self.goalFace:
+            raise Exception("Goal face is invalid")
+
         self.bp = blueprint
         self.building_dimensions = self.bp.shape
         print("\nBuilding Dimensions: {}\n".format(self.building_dimensions))
         self.colors = np.array([[[(0,0,1,0.3)]*self.building_dimensions[2]] * self.building_dimensions[1]]*self.building_dimensions[0], )
 
-        self.route = None
         # self.logger = logging.getLogger('PathPlanning')
 
     def heuristic(self, a, b):
@@ -121,17 +143,17 @@ class FaceStar:
             return False          
 
     def target_on_perpendicular_plane_huh(self, currentFace, targetFace, currentFaceIdx, targetFaceIdx):
-        if currentFaceIdx == 'a' and targetFace[1] > currentFace[1] and targetFaceIdx == 'a' and targetFaceIdx == 'b':
+        if currentFaceIdx == 'a' and targetFace[1] > currentFace[1] and (targetFaceIdx == 'a' or targetFaceIdx == 'b'):
             return False
-        elif currentFaceIdx == 'b' and targetFace[1] < currentFace[1] and targetFaceIdx == 'a' and targetFaceIdx == 'b':
+        elif currentFaceIdx == 'b' and targetFace[1] < currentFace[1] and (targetFaceIdx == 'a' or targetFaceIdx == 'b'):
             return False
-        elif currentFaceIdx == 'c' and targetFace[0] > currentFace[0] and targetFaceIdx == 'c' and targetFaceIdx == 'd':
+        elif currentFaceIdx == 'c' and targetFace[0] > currentFace[0] and (targetFaceIdx == 'c' or targetFaceIdx == 'd'):
             return False
-        elif currentFaceIdx == 'd' and targetFace[0] < currentFace[0] and targetFaceIdx == 'c' and targetFaceIdx == 'd':
+        elif currentFaceIdx == 'd' and targetFace[0] < currentFace[0] and (targetFaceIdx == 'c' or targetFaceIdx == 'd'):
             return False
-        elif currentFaceIdx == 'e' and targetFace[2] < currentFace[2] and targetFaceIdx == 'e' and targetFaceIdx == 'f':
+        elif currentFaceIdx == 'e' and targetFace[2] < currentFace[2] and (targetFaceIdx == 'e' or targetFaceIdx == 'f'):
             return False
-        elif currentFaceIdx == 'f' and targetFace[2] > currentFace[2] and targetFaceIdx == 'e' and targetFaceIdx == 'f':
+        elif currentFaceIdx == 'f' and targetFace[2] > currentFace[2] and (targetFaceIdx == 'e' or targetFaceIdx == 'f'):
             return False
         else:
             return True
@@ -203,8 +225,8 @@ class FaceStar:
 
 
 if __name__ == '__main__':
-    startFace = (0,0,0.49)
-    endFace = (7,2.49,1)
+    startFace = BlockFace(0,0,0,'e')
+    endFace = BlockFace(7,2,2,'b')
     bp1  = np.array([
             [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
             [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
@@ -213,7 +235,7 @@ if __name__ == '__main__':
             [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
             [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
             [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
-            [[1, 0, 0], [1, 0, 0], [1, 1, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
+            [[1, 0, 0], [1, 0, 0], [1, 1, 1], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
         ])
 
     bp2 = np.array([
@@ -221,6 +243,7 @@ if __name__ == '__main__':
         [[1, 0, 0], [0, 0, 0], [0, 0, 0]],
         [[1, 0, 0], [0, 0, 0], [0, 0, 0]],
     ])
+    
 
     faceStarPlanner = FaceStar(startFace,endFace,bp1)
 
