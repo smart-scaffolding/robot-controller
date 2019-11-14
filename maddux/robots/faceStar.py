@@ -20,17 +20,17 @@ class BlockFace:
     
     def get_face_coordinate(self):
         coordinate = [self.xPos, self.yPos, self.zPos]
-        if self.face == 'a':
+        if self.face == 'front':
             coordinate[1] = coordinate[1] - blockWidth
-        elif self.face == 'b':
+        elif self.face == 'back':
             coordinate[1] = coordinate[1] + blockWidth
-        elif self.face == 'c':
+        elif self.face == 'left':
             coordinate[0] = coordinate[0] - blockWidth
-        elif self.face == 'd':
+        elif self.face == 'right':
             coordinate[0] = coordinate[0] + blockWidth
-        elif self.face == 'e':
+        elif self.face == 'top':
             coordinate[2] = coordinate[2] + blockWidth
-        elif self.face == 'f':
+        elif self.face == 'bottom':
             coordinate[2] = coordinate[2] - blockWidth
         else:
             return None
@@ -39,7 +39,7 @@ class BlockFace:
 
 
 class FaceStar:
-    def __init__(self, startFace, goalFace, blueprint):
+    def __init__(self, startFace, goalFace, blueprint, armReach):
 
         self.startFace = startFace.get_face_coordinate()
         if not self.startFace:
@@ -48,8 +48,10 @@ class FaceStar:
         if not self.goalFace:
             raise Exception("Goal face is invalid")
 
+        self.path = [] # this path stores the faces as coordinates
         self.bp = blueprint
         self.building_dimensions = self.bp.shape
+        self.armReach = armReach
         print("\nBuilding Dimensions: {}\n".format(self.building_dimensions))
         self.colors = np.array([[[(0,0,1,0.3)]*self.building_dimensions[2]] * self.building_dimensions[1]]*self.building_dimensions[0], )
 
@@ -80,8 +82,6 @@ class FaceStar:
                      (0, 0, -1)
                      ]
 
-        armReach = 1.6
-
         close_set = set()
         came_from = {}
         gscore = {startFace: 0}
@@ -97,8 +97,12 @@ class FaceStar:
             if currentFace == goalFace:
                 data = []
                 while currentFace in came_from:
-                    data.append(currentFace)
+                    pathNode = self.parse_output(currentFace)
+                    data.append(pathNode)
+                    self.path.append(currentFace)
                     currentFace = came_from[currentFace]
+                data.append(self.parse_output(self.startFace))
+                self.path.append(self.startFace)
                 return data
 
             close_set.add(currentFace)
@@ -115,10 +119,11 @@ class FaceStar:
                 # for each face on neighbor
                 for x, y, z in neighborFaces:
                     # if there is not a block on a face
-                    nextNeighbor = neighbor[0]+x, neighbor[1]+y, neighbor[1]+z
-                    if self.within_range_huh(nextNeighbor[0], nextNeighbor[1], nextNeighbor[2]):
-                        if self.bp[nextNeighbor[0]][nextNeighbor[1]][nextNeighbor[2]] == 0:
-                            neighborFace = neighbor[0] + x*blockWidth, neighbor[1] + y*blockWidth, neighbor[2] + z*blockWidth
+                    nextNeighbor = neighbor[0]+x, neighbor[1]+y, neighbor[2]+z
+                    if (self.within_range_huh(nextNeighbor[0], nextNeighbor[1], nextNeighbor[2]) and self.bp[nextNeighbor[0]][nextNeighbor[1]][nextNeighbor[2]] == 0) or (not self.within_range_huh(nextNeighbor[0], nextNeighbor[1], nextNeighbor[2])):
+                        neighborFace = neighbor[0] + x*blockWidth, neighbor[1] + y*blockWidth, neighbor[2] + z*blockWidth
+                        if self.face_reachable_huh(currentFace, neighborFace):
+
                             tentative_g_score = gscore[currentFace] + self.heuristic(currentFace, neighborFace)
 
                             if neighborFace in close_set and tentative_g_score >= gscore.get(neighborFace, 0):
@@ -130,8 +135,8 @@ class FaceStar:
                                 fscore[neighborFace] = tentative_g_score + self.heuristic(neighborFace, goalFace)
                                 heapq.heappush(oheap, (fscore[neighborFace], neighborFace))
 
-    def face_reachable_huh(self, currentFace, targetFace, armReach):
-        if self.heuristic(currentFace, targetFace) < armReach:
+    def face_reachable_huh(self, currentFace, targetFace):
+        if self.heuristic(currentFace, targetFace) < self.armReach:
             currentFaceIdx = self.get_face_index(currentFace)
             targetFaceIdx = self.get_face_index(targetFace)
             if self.target_on_perpendicular_plane_huh(currentFace, targetFace, currentFaceIdx, targetFaceIdx):
@@ -143,20 +148,43 @@ class FaceStar:
             return False          
 
     def target_on_perpendicular_plane_huh(self, currentFace, targetFace, currentFaceIdx, targetFaceIdx):
-        if currentFaceIdx == 'a' and targetFace[1] > currentFace[1] and (targetFaceIdx == 'a' or targetFaceIdx == 'b'):
+        if currentFaceIdx == 'front' and targetFace[1] > currentFace[1] and (targetFaceIdx == 'front' or targetFaceIdx == 'back'):
             return False
-        elif currentFaceIdx == 'b' and targetFace[1] < currentFace[1] and (targetFaceIdx == 'a' or targetFaceIdx == 'b'):
+        elif currentFaceIdx == 'back' and targetFace[1] < currentFace[1] and (targetFaceIdx == 'front' or targetFaceIdx == 'back'):
             return False
-        elif currentFaceIdx == 'c' and targetFace[0] > currentFace[0] and (targetFaceIdx == 'c' or targetFaceIdx == 'd'):
+        elif currentFaceIdx == 'left' and targetFace[0] > currentFace[0] and (targetFaceIdx == 'left' or targetFaceIdx == 'right'):
             return False
-        elif currentFaceIdx == 'd' and targetFace[0] < currentFace[0] and (targetFaceIdx == 'c' or targetFaceIdx == 'd'):
+        elif currentFaceIdx == 'right' and targetFace[0] < currentFace[0] and (targetFaceIdx == 'left' or targetFaceIdx == 'right'):
             return False
-        elif currentFaceIdx == 'e' and targetFace[2] < currentFace[2] and (targetFaceIdx == 'e' or targetFaceIdx == 'f'):
+        elif currentFaceIdx == 'top' and targetFace[2] < currentFace[2] and (targetFaceIdx == 'top' or targetFaceIdx == 'bottom'):
             return False
-        elif currentFaceIdx == 'f' and targetFace[2] > currentFace[2] and (targetFaceIdx == 'e' or targetFaceIdx == 'f'):
+        elif currentFaceIdx == 'bottom' and targetFace[2] > currentFace[2] and (targetFaceIdx == 'top' or targetFaceIdx == 'bottom'):
             return False
         else:
             return True
+
+    def parse_output(self, face):
+        idx_x, idx_y, idx_z = self.get_block_idx(face)
+        if self.within_range_huh(idx_x, idx_y, idx_z):
+            faceLabel = ''
+            if self.bp[idx_x][idx_y][idx_z] == 0:
+                pass
+            else:
+                if idx_x < face[0]:
+                    faceLabel = 'right'
+                elif idx_x > face[0]:
+                    faceLabel = 'left'
+                elif idx_y < face[1]:
+                    faceLabel = 'back'
+                elif idx_y > face[1]:
+                    faceLabel = 'front'
+                elif idx_z < face[2]:
+                    faceLabel = 'top'
+                elif idx_z > face[2]:
+                    faceLabel = 'bottom'
+            return idx_x, idx_y, idx_z, faceLabel
+        else:
+            return None
 
     def get_face_index(self, face):
         idx_x, idx_y, idx_z = self.get_block_idx(face)
@@ -165,18 +193,18 @@ class FaceStar:
             if self.bp[idx_x][idx_y][idx_z] == 0:
                 return None
             else:
-                if idx_x < face[0]: # face d
-                    return 'd'
-                elif idx_x > face[0]: # face c
-                    return 'c'
-                elif idx_y < face[1]: # face b
-                    return 'b'
-                elif idx_y > face[1]: # face a
-                    return 'a'
-                elif idx_z < face[2]: # face e
-                    return 'e'
-                elif idx_z > face[2]: # face f
-                    return 'f'
+                if idx_x < face[0]:
+                    return 'right'
+                elif idx_x > face[0]:
+                    return 'left'
+                elif idx_y < face[1]:
+                    return 'back'
+                elif idx_y > face[1]:
+                    return 'front'
+                elif idx_z < face[2]:
+                    return 'top'
+                elif idx_z > face[2]:
+                    return 'bottom'
 
     def get_block_idx(self, face):
         idx_x = int(round(face[0]))
@@ -195,7 +223,6 @@ class FaceStar:
         if route is None:
             # self.logger.error("Unable to find route between points {} and {}".format(self.startFace, self.goalFace))
             raise Exception("Path planning unable to find route")
-        route = route + [self.startFace]
         route = route[::-1]
         print("Path to Traverse: {}\n".format(route))
         self.route = route
@@ -208,13 +235,15 @@ class FaceStar:
     #     self.colors[self.route[-1]] = '#03fc62'
     #     return self.colors
 
-    def display_path(self, path):
+    def display_path(self, path=None):
+        if not path:
+            path = self.path
         npPath = np.array(path)
         npPath = np.add(npPath,0.5)
 
         fig = plt.figure(figsize=(12, 12))
         ax = Axes3D(fig)
-        ax.voxels(bp1, facecolors=faceStarPlanner.colors, edgecolors='gray', zorder=0)
+        ax.voxels(self.bp, facecolors=self.colors, edgecolors='gray', zorder=0)
         ax.set_xlim(0, 10)
         ax.set_ylim(0, 10)
         ax.set_zlim(0, 10)
@@ -223,33 +252,73 @@ class FaceStar:
 
         plt.show()
 
+    def display_blueprint(self):
+        fig = plt.figure(figsize=(12, 12))
+        ax = Axes3D(fig)
+        ax.voxels(self.bp, facecolors=self.colors, edgecolors='gray', zorder=0)
+        ax.set_xlim(0, 10)
+        ax.set_ylim(0, 10)
+        ax.set_zlim(0, 10)
+        plt.show()
+
+    def display_start_end(self,path=None):
+        if not path:
+            path = self.path
+        npPath = np.array(path)
+        npPath = np.add(npPath,0.5)
+
+        fig = plt.figure(figsize=(12, 12))
+        ax = Axes3D(fig)
+        ax.voxels(self.bp, facecolors=self.colors, edgecolors='gray', zorder=0)
+        ax.set_xlim(0, 10)
+        ax.set_ylim(0, 10)
+        ax.set_zlim(0, 10)
+
+        ax.plot(npPath[:,0],npPath[:,1],npPath[:,2],c='r',marker='o',markersize=25)
+        plt.show()
+        
+
 
 if __name__ == '__main__':
-    startFace = BlockFace(0,0,0,'e')
-    endFace = BlockFace(7,2,2,'b')
+    armReach = 1.4
+
+    startFace = BlockFace(0,0,0,'top')
+    endFace = BlockFace(7,2,2,'right')
     bp1  = np.array([
             [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
             [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
-            [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
-            [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
+            [[1, 1, 0], [1, 1, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
+            [[1, 1, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
             [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
             [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
             [[1, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
             [[1, 0, 0], [1, 0, 0], [1, 1, 1], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
         ])
 
+    faceStarPlanner = FaceStar(startFace, endFace, bp1, armReach)
+    path = faceStarPlanner.get_path()
+    faceStarPlanner.display_path()
+
     bp2 = np.array([
         [[1, 0, 0], [0, 0, 0], [0, 0, 0]],
         [[1, 0, 0], [0, 0, 0], [0, 0, 0]],
         [[1, 0, 0], [0, 0, 0], [0, 0, 0]],
     ])
-    
 
-    faceStarPlanner = FaceStar(startFace,endFace,bp1)
+    bp3 = np.array([
+        [[1, 0, 0], [0, 0, 0], [0, 0, 0]],
+        [[1, 0, 0], [0, 0, 0], [0, 0, 0]],
+        [[1, 0, 0], [1, 0, 0], [1, 1, 1]],
+    ])
 
-    path = faceStarPlanner.get_path()
-    # path = [(0, 0, 0.49), (1.0, 0.0, 0.49), (2.0, 0.49, 0.0), (3.0, 0.49, 0.0), (4.0, 0.49, 0.0), (5.0, 0.49, 0.0), (6.0, 0.49, 0.0), (6.51, 1.0, 0.0), (7.0, 2.49, 0.0)]
-    faceStarPlanner.display_path(path)
+    startFaceDebug = BlockFace(0,0,0,'top')
+    endFaceDebug = BlockFace(2,0,0,'right')
+
+    # faceStarDebug = FaceStar(startFaceDebug, endFaceDebug, bp3, armReach)
+    # faceStarDebug.display_blueprint()
+    # faceStarDebug.display_start_end([startFaceDebug.get_face_coordinate(),endFaceDebug.get_face_coordinate()])
+    # path = faceStarDebug.get_path()
+    # faceStarDebug.display_path()
 
     
 
