@@ -51,7 +51,7 @@ class FaceStar:
         self.path = [] # this path stores the faces as coordinates
         self.bp = blueprint
         self.building_dimensions = self.bp.shape
-        self.armReach = armReach
+        self.armReach = armReach # first element: arm reach in same face situation; second element: arm reach in different face situation
         print("\nBuilding Dimensions: {}\n".format(self.building_dimensions))
         self.colors = np.array([[[(0,0,1,0.3)]*self.building_dimensions[2]] * self.building_dimensions[1]]*self.building_dimensions[0], )
 
@@ -135,33 +135,58 @@ class FaceStar:
                                 fscore[neighborFace] = tentative_g_score + self.heuristic(neighborFace, goalFace)
                                 heapq.heappush(oheap, (fscore[neighborFace], neighborFace))
 
-    def face_reachable_huh(self, currentFace, targetFace):
-        if self.heuristic(currentFace, targetFace) < self.armReach:
-            currentFaceIdx = self.get_face_index(currentFace)
-            targetFaceIdx = self.get_face_index(targetFace)
-            if self.target_on_perpendicular_plane_huh(currentFace, targetFace, currentFaceIdx, targetFaceIdx):
-                return True
-            else:
+    def face_reachable_huh(self, lastFace, targetFace):
+        lastFaceIdx = self.get_face_index(lastFace)
+        targetFaceIdx = self.get_face_index(targetFace)
+        if lastFaceIdx == 'front':
+            if targetFaceIdx == 'back' and targetFace[1] > lastFace[1]:
                 return False
-        # TODO there may be potential special cases that needs to be handled with
-        else:
-            return False          
+            elif targetFaceIdx == 'front' and lastFace[0] == targetFace[0] and lastFace[2] == targetFace[2]:
+                return False
+            elif targetFaceIdx != 'front' and lastFace[2] != targetFace[2] and lastFace[0] != targetFace[0]: # face not same xy plane or yz plane
+                return False
+        elif lastFaceIdx == 'back':
+            if targetFaceIdx == 'front' and targetFace[1] < lastFace[1]:
+                return False
+            elif targetFaceIdx == 'back' and lastFace[0] == targetFace[0] and lastFace[2] == targetFace[2]:
+                return False
+            elif targetFaceIdx != 'back' and lastFace[2] != targetFace[2] and lastFace[0] != targetFace[0]: # face not same xy plane or yz plane
+                return False
+        elif lastFaceIdx == 'left':
+            if targetFaceIdx == 'right' and targetFace[0] > lastFace[0]:
+                return False
+            elif targetFaceIdx == 'left' and lastFace[1] == targetFace[1] and lastFace[2] == targetFace[2]:
+                return False
+            elif targetFaceIdx != 'left' and lastFace[2] != targetFace[2] and lastFace[1] != targetFace[1]: # face not same xy plane or xz plane
+                return False
+        elif lastFaceIdx == 'right':
+            if targetFaceIdx == 'left' and targetFace[0] < lastFace[0]:
+                return False
+            elif targetFaceIdx == 'right' and lastFace[1] == targetFace[1] and lastFace[2] == targetFace[2]:
+                return False
+            elif targetFaceIdx != 'right' and lastFace[2] != targetFace[2] and lastFace[1] != targetFace[1]: # face not same xy plane or xz plane
+                return False
+        elif lastFaceIdx == 'top':
+            if targetFaceIdx == 'bottom' and targetFace[2] < lastFace[2]:
+                return False
+            elif targetFaceIdx == 'top' and lastFace[0] == targetFace[0] and lastFace[1] == targetFace[1]:
+                return False
+            elif targetFaceIdx != 'top' and lastFace[1] != targetFace[1] and lastFace[0] != targetFace[0]: # face not same xz plane or yz plane
+                return False
+        elif lastFaceIdx == 'bottom':
+            if targetFaceIdx == 'top' and targetFace[2] > lastFace[2]:
+                return False
+            elif targetFaceIdx == 'bottom' and lastFace[0] == targetFace[0] and lastFace[1] == targetFace[1]:
+                return False
+            elif targetFaceIdx != 'bottom' and lastFace[1] != targetFace[1] and lastFace[0] != targetFace[0]: # face not same xz plane or yz plane
+                return False
 
-    def target_on_perpendicular_plane_huh(self, currentFace, targetFace, currentFaceIdx, targetFaceIdx):
-        if currentFaceIdx == 'front' and targetFace[1] > currentFace[1] and (targetFaceIdx == 'front' or targetFaceIdx == 'back'):
-            return False
-        elif currentFaceIdx == 'back' and targetFace[1] < currentFace[1] and (targetFaceIdx == 'front' or targetFaceIdx == 'back'):
-            return False
-        elif currentFaceIdx == 'left' and targetFace[0] > currentFace[0] and (targetFaceIdx == 'left' or targetFaceIdx == 'right'):
-            return False
-        elif currentFaceIdx == 'right' and targetFace[0] < currentFace[0] and (targetFaceIdx == 'left' or targetFaceIdx == 'right'):
-            return False
-        elif currentFaceIdx == 'top' and targetFace[2] < currentFace[2] and (targetFaceIdx == 'top' or targetFaceIdx == 'bottom'):
-            return False
-        elif currentFaceIdx == 'bottom' and targetFace[2] > currentFace[2] and (targetFaceIdx == 'top' or targetFaceIdx == 'bottom'):
-            return False
-        else:
+        if lastFaceIdx == targetFaceIdx and self.heuristic(lastFace, targetFace) < self.armReach[0]:
             return True
+        elif lastFaceIdx != targetFaceIdx and 0.8 < self.heuristic(lastFace, targetFace) < self.armReach[1]:
+            return True
+        else:
+            return False
 
     def parse_output(self, face):
         idx_x, idx_y, idx_z = self.get_block_idx(face)
@@ -280,7 +305,8 @@ class FaceStar:
 
 
 if __name__ == '__main__':
-    armReach = 1.4
+    armReach = [2.38, 1.58]
+    # armReach = [3, 3]
 
     startFace = BlockFace(0,0,0,'top')
     endFace = BlockFace(7,2,2,'right')
