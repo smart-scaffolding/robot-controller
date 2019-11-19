@@ -183,7 +183,7 @@ class FaceStar:
 
         if lastFaceIdx == targetFaceIdx and self.heuristic(lastFace, targetFace) < self.armReach[0]:
             return True
-        elif lastFaceIdx != targetFaceIdx and 0.8 < self.heuristic(lastFace, targetFace) < self.armReach[1]:
+        elif lastFaceIdx != targetFaceIdx and self.armReach[1]/2 < self.heuristic(lastFace, targetFace) < self.armReach[1]:
             return True
         else:
             return False
