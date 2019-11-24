@@ -73,7 +73,7 @@ class RobotBehavior:
         q = self.robot.ikineConstrained(destination)
         self.robot_animation_cache.append(self.robot)
         self.robot.update_angles(q)
-        return self.robot
+        return q
 
     def move_to_point(self, destination, offset=pi):
         new_pos = self.robot.end_effector_position()
@@ -85,7 +85,7 @@ class RobotBehavior:
 
         self.robot_animation_cache.append(self.robot)
         self.robot.update_angles(q)
-        return self.robot
+        return q
 
     def place_block(self, location, direction="Z"):
         if direction == "Z":

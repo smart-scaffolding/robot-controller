@@ -1,2 +1,2 @@
-10-06 21:27 RobotBehavior INFO     FOLLOWING PATH
-10-06 21:27 matplotlib.font_manager DEBUG    findfont: Matching :family=sans-serif:style=normal:variant=normal:weight=normal:stretch=normal:size=10.0 to DejaVu Sans (u'/Users/nar/miniconda3/envs/py27/lib/python2.7/site-packages/matplotlib/mpl-data/fonts/ttf/DejaVuSans.ttf') with score of 0.050000
+11-04 19:15 RobotBehavior INFO     FOLLOWING PATH
+11-04 19:15 matplotlib.font_manager DEBUG    findfont: Matching :family=sans-serif:style=normal:variant=normal:weight=normal:stretch=normal:size=10.0 to DejaVu Sans (u'/Library/Python/2.7/site-packages/matplotlib/mpl-data/fonts/ttf/DejaVuSans.ttf') with score of 0.050000

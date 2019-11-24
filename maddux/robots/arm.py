@@ -335,6 +335,7 @@ class Arm:
             q = q + (alpha * delta_q.flatten())
 
             # xy = (curr[0]**2 + curr[1]**2)**0.5
+            # q[-1] = q[1] - 1.6
             q[-1] = q[1] - np.pi/2
             # q[-2] = 1.3
             # if vertical:
@@ -348,6 +349,38 @@ class Arm:
             if abs(np.linalg.norm(err)) <= 1e-1:
                 return q
         raise ValueError("Could not find solution.")
+
+    def ikineAlgebraic(self, p, num_iterations=1000, alpha=0.1, prior_q=None, vertical=False):
+        """Computes the inverse kinematics to find the correct joint
+        configuration to reach a given point
+
+        :param p: The point (x, y, z) to solve the inverse kinematics for
+        :type p: numpy.ndarray
+
+        :param num_iterations: The number of iterations to try before
+                               giving up
+        :type num_iterations: int
+
+        :param alpha: The stepsize for the ikine solver (0.0 - 1.0)
+        :type alpha: int
+
+        :returns: 1xN vector of the joint configuration for given point p.
+        :rtype: numpy.ndarray
+        """
+        # Check to make sure alpha is between 0 and 1
+        if not (0.0 <= alpha <= 1.0):
+            print "Invalid alpha. Defaulting to 0.1"
+            alpha = 0.1
+
+        q = self.get_current_joint_config()
+
+        pTarget = np.copy(p)
+        # TODO fix the hardcoded value
+        pTarget[2] = pTarget[2] + 2.0
+        goal = utils.create_homogeneous_transform_from_point(pTarget)
+
+        raise ValueError("Could not find solution.")
+
 
     def jacob0(self, q=None):
         """Calculates the jacobian in the world frame by finding it in
