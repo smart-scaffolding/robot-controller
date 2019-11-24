@@ -1,6 +1,6 @@
 # Smart Scaffolding Robot Controller
 
-This repo is for the robot controllers as well as includes a simulation using Matplotlib to view the robot
+This repo is for the robot controllers as well as includes a simulation using Matplotlib to view the robot. This repo will no longer be worked on. Instead, work will be continued in the vtk-simulator repo.
 
 ## Getting Started
 
@@ -73,6 +73,7 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 ## Authors
 
 * **Caleb Wagner** - *Initial work* -
+* **Ben Liang** - *faceStar* -
 
 See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
 
