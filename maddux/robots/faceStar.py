@@ -9,6 +9,8 @@ import heapq
 # note: variable ending with "face" is the coordinate of a face; variable ending with "idx" is a face label of a face
 
 blockWidth = 0.49 # it is not 0.5 cuz this would make it a lot easier to calculate which block a face belongs to
+searchRange = 2
+moveCost = 1
 
 class BlockFace:
 
@@ -63,17 +65,6 @@ class FaceStar:
     # array: the current structure, startFace: the start face, goalFace: the goal face
     def faceStar(self, startFace, goalFace):
 
-        neighbors = [(0, 1, 0), (0, 1, -1), (0, 1, 1),
-                     (0, -1, 0), (0, -1, -1), (0, -1, 1),
-                     (1, 0, 0), (1, 0, -1), (1, 0, 1),
-                     (-1, 0, 0), (-1, 0, -1), (-1, 0, 1),
-                     (0, 0, 0),(0, 0, 1), (0, 0, -1),
-                     (1, 1, 0), (1, 1, -1), (1, 1, 1),
-                     (1, -1, 0), (1, -1, -1), (1, -1, 1),
-                     (-1, 1, 0), (-1, 1, -1), (-1, 1, 1),
-                     (-1, -1, 0), (-1, -1, -1), (-1, -1, 1)
-                     ]
-
         neighborFaces = [(0, 1, 0),
                      (0, -1, 0),
                      (1, 0, 0),
@@ -106,34 +97,37 @@ class FaceStar:
                 return data
 
             close_set.add(currentFace)
-            for i, j, k in neighbors:
-                currentBlock = self.get_block_idx(currentFace)
-                neighbor = currentBlock[0] + i, currentBlock[1] + j, currentBlock[2] + k
-                # for each available neighbor
-                if self.within_range_huh(neighbor[0], neighbor[1], neighbor[2]):
-                    if self.bp[neighbor[0]][neighbor[1]][neighbor[2]] == 0:
-                        continue
-                else:
-                    continue
-                
-                # for each face on neighbor
-                for x, y, z in neighborFaces:
-                    # if there is not a block on a face
-                    nextNeighbor = neighbor[0]+x, neighbor[1]+y, neighbor[2]+z
-                    if (self.within_range_huh(nextNeighbor[0], nextNeighbor[1], nextNeighbor[2]) and self.bp[nextNeighbor[0]][nextNeighbor[1]][nextNeighbor[2]] == 0) or (not self.within_range_huh(nextNeighbor[0], nextNeighbor[1], nextNeighbor[2])):
-                        neighborFace = neighbor[0] + x*blockWidth, neighbor[1] + y*blockWidth, neighbor[2] + z*blockWidth
-                        if self.face_reachable_huh(currentFace, neighborFace):
-
-                            tentative_g_score = gscore[currentFace] + self.heuristic(currentFace, neighborFace)
-
-                            if neighborFace in close_set and tentative_g_score >= gscore.get(neighborFace, 0):
+            for i in range(-searchRange,searchRange+1):
+                for j in range(-searchRange,searchRange+1):
+                    for k in range(-searchRange,searchRange+1):
+                        currentBlock = self.get_block_idx(currentFace)
+                        neighbor = currentBlock[0] + i, currentBlock[1] + j, currentBlock[2] + k
+                        # for each available neighbor
+                        if self.within_range_huh(neighbor[0], neighbor[1], neighbor[2]):
+                            if self.bp[neighbor[0]][neighbor[1]][neighbor[2]] == 0:
                                 continue
+                        else:
+                            continue
 
-                            if tentative_g_score < gscore.get(neighborFace, 0) or neighborFace not in [i[1]for i in oheap]:
-                                came_from[neighborFace] = currentFace
-                                gscore[neighborFace] = tentative_g_score
-                                fscore[neighborFace] = tentative_g_score + self.heuristic(neighborFace, goalFace)
-                                heapq.heappush(oheap, (fscore[neighborFace], neighborFace))
+                        # for each face on neighbor
+                        for x, y, z in neighborFaces:
+                            # if there is not a block on a face
+                            nextNeighbor = neighbor[0]+x, neighbor[1]+y, neighbor[2]+z
+                            # if next block is within range and is empty or if next block is outside of the range
+                            if (self.within_range_huh(nextNeighbor[0], nextNeighbor[1], nextNeighbor[2]) and self.bp[nextNeighbor[0]][nextNeighbor[1]][nextNeighbor[2]] == 0) or (not self.within_range_huh(nextNeighbor[0], nextNeighbor[1], nextNeighbor[2])):
+                                neighborFace = neighbor[0] + x*blockWidth, neighbor[1] + y*blockWidth, neighbor[2] + z*blockWidth
+                                if self.face_reachable_huh(currentFace, neighborFace):
+
+                                    tentative_g_score = gscore[currentFace] + self.heuristic(currentFace, neighborFace) + moveCost
+
+                                    if neighborFace in close_set and tentative_g_score >= gscore.get(neighborFace, 0):
+                                        continue
+
+                                    if tentative_g_score < gscore.get(neighborFace, 0) or neighborFace not in [i[1]for i in oheap]:
+                                        came_from[neighborFace] = currentFace
+                                        gscore[neighborFace] = tentative_g_score
+                                        fscore[neighborFace] = tentative_g_score + self.heuristic(neighborFace, goalFace)
+                                        heapq.heappush(oheap, (fscore[neighborFace], neighborFace))
 
     def face_reachable_huh(self, lastFace, targetFace):
         lastFaceIdx = self.get_face_index(lastFace)
@@ -305,8 +299,8 @@ class FaceStar:
 
 
 if __name__ == '__main__':
-    armReach = [2.38, 1.58]
-    # armReach = [3, 3]
+    # armReach = [2.38, 1.6]
+    armReach = [2.38, 2.38]
 
     startFace = BlockFace(0,0,0,'top')
     endFace = BlockFace(7,2,2,'right')
@@ -321,14 +315,19 @@ if __name__ == '__main__':
             [[1, 0, 0], [1, 0, 0], [1, 1, 1], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
         ])
 
-    faceStarPlanner = FaceStar(startFace, endFace, bp1, armReach)
-    path = faceStarPlanner.get_path()
-    faceStarPlanner.display_path()
+    # faceStarPlanner = FaceStar(startFace, endFace, bp1, armReach)
+    # path = faceStarPlanner.get_path()
+    # faceStarPlanner.display_path()
 
     bp2 = np.array([
-        [[1, 0, 0], [0, 0, 0], [0, 0, 0]],
-        [[1, 0, 0], [0, 0, 0], [0, 0, 0]],
-        [[1, 0, 0], [0, 0, 0], [0, 0, 0]],
+        [[1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 0, 0]],
+        [[1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 0, 0]],
+        [[1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 0, 0]],
+        [[1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 0, 0]],
+        [[1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 0, 0]],
+        [[1, 0, 0, 0], [1, 1, 0, 0], [1, 1, 1, 1]],
+        [[1, 0, 0, 0], [1, 1, 1, 0], [1, 1, 1, 1]],
+        [[1, 0, 0, 0], [1, 1, 1, 1], [1, 1, 1, 1]],
     ])
 
     bp3 = np.array([
@@ -337,14 +336,14 @@ if __name__ == '__main__':
         [[1, 0, 0], [1, 0, 0], [1, 1, 1]],
     ])
 
-    startFaceDebug = BlockFace(0,0,0,'top')
-    endFaceDebug = BlockFace(2,0,0,'right')
+    startFaceDebug = BlockFace(1,2,0,'top')
+    endFaceDebug = BlockFace(5,2,3,'top')
 
-    # faceStarDebug = FaceStar(startFaceDebug, endFaceDebug, bp3, armReach)
+    faceStarDebug = FaceStar(startFaceDebug, endFaceDebug, bp2, armReach)
     # faceStarDebug.display_blueprint()
     # faceStarDebug.display_start_end([startFaceDebug.get_face_coordinate(),endFaceDebug.get_face_coordinate()])
-    # path = faceStarDebug.get_path()
-    # faceStarDebug.display_path()
+    path = faceStarDebug.get_path()
+    faceStarDebug.display_path()
 
     
 
